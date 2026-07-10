@@ -6,7 +6,7 @@ import { CityChips } from '@/components/locations/city-chips';
 import { CategoryChips } from '@/components/locations/category-chips';
 import { serializeCard } from '@/lib/serialize';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 async function getHomeData() {
   const [featured, recent, trending, totalLocations, totalUsers] = await Promise.all([

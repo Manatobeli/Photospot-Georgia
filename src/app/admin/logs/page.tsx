@@ -4,7 +4,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ScrollText } from 'lucide-react';
 
-export const metadata: Metadata = { title: 'Admin Logs' };
+export const dynamic = 'force-dynamic';
 
 export default async function AdminLogsPage() {
   const logs = await prisma.adminLog.findMany({

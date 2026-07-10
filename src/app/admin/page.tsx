@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 import { Avatar } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 
-export const metadata: Metadata = { title: 'Admin Overview' };
+export const dynamic = 'force-dynamic';
 
 export default async function AdminOverviewPage() {
   const [
