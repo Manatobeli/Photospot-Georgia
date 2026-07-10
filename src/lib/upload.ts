@@ -1,21 +1,14 @@
 import 'server-only';
-import { mkdir, writeFile } from 'fs/promises';
-import path from 'path';
 import crypto from 'crypto';
 import sharp from 'sharp';
+import { getSupabaseAdmin, STORAGE_BUCKET } from '@/lib/supabase-admin';
 
-const UPLOAD_ROOT = path.join(process.cwd(), 'public', 'uploads');
-const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8MB
+const MAX_FILE_BYTES = 4 * 1024 * 1024; // 4MB
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
 const MAX_DIMENSION = 2400;
 
 export class UploadError extends Error {}
 
-/**
- * Accepts a browser File from a multipart form, validates it, compresses /
- * resizes it, and writes it to /public/uploads/<subdir>/<hash>.webp.
- * Returns the public URL plus final dimensions.
- */
 export async function saveUploadedImage(
   file: File,
   subdir: 'locations' | 'avatars'
@@ -24,20 +17,17 @@ export async function saveUploadedImage(
     throw new UploadError('Only JPEG, PNG, WEBP or AVIF images are allowed');
   }
   if (file.size > MAX_FILE_BYTES) {
-    throw new UploadError('Image must be smaller than 8MB');
+    throw new UploadError('Image must be smaller than 4MB');
   }
 
   const arrayBuffer = await file.arrayBuffer();
   const inputBuffer = Buffer.from(arrayBuffer);
 
-  const dir = path.join(UPLOAD_ROOT, subdir);
-  await mkdir(dir, { recursive: true });
-
   const hash = crypto.randomBytes(12).toString('hex');
   const filename = `${Date.now()}-${hash}.webp`;
-  const outputPath = path.join(dir, filename);
+  const objectPath = `${subdir}/${filename}`;
 
-  let pipeline = sharp(inputBuffer).rotate(); // auto-orient via EXIF
+  let pipeline = sharp(inputBuffer).rotate();
   const metadata = await pipeline.metadata();
 
   if ((metadata.width ?? 0) > MAX_DIMENSION || (metadata.height ?? 0) > MAX_DIMENSION) {
@@ -50,10 +40,23 @@ export async function saveUploadedImage(
   }
 
   const output = await pipeline.webp({ quality: 82 }).toBuffer({ resolveWithObject: true });
-  await writeFile(outputPath, output.data);
+
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(objectPath, output.data, {
+    contentType: 'image/webp',
+    cacheControl: '31536000',
+    upsert: false,
+  });
+
+  if (error) {
+    console.error('Supabase Storage upload failed:', error);
+    throw new UploadError('Could not save image. Please try again.');
+  }
+
+  const { data: publicUrlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(objectPath);
 
   return {
-    url: `/uploads/${subdir}/${filename}`,
+    url: publicUrlData.publicUrl,
     width: output.info.width,
     height: output.info.height,
   };

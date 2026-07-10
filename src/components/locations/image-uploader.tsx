@@ -34,16 +34,19 @@ export function ImageUploader({
         return;
       }
 
-      const formData = new FormData();
-      formData.set('type', 'locations');
-      files.forEach((f) => formData.append('files', f));
-
       setUploading(true);
       try {
-        const res = await fetch('/api/upload', { method: 'POST', body: formData });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Upload failed');
-        onChange([...images, ...data.images]);
+        const uploaded: UploadedImage[] = [];
+        for (const file of files) {
+          const formData = new FormData();
+          formData.set('type', 'locations');
+          formData.append('files', file);
+          const res = await fetch('/api/upload', { method: 'POST', body: formData });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || `Upload failed for "${file.name}"`);
+          uploaded.push(...data.images);
+        }
+        onChange([...images, ...uploaded]);
       } catch (err: any) {
         toast.error(err.message || 'Upload failed');
       } finally {
@@ -52,6 +55,7 @@ export function ImageUploader({
     },
     [images, max, onChange]
   );
+
 
   return (
     <div className="space-y-3">
@@ -82,7 +86,7 @@ export function ImageUploader({
         <p className="mt-2 text-sm font-medium text-neutral-700 dark:text-neutral-200">
           {uploading ? 'Uploading…' : 'Click or drag photos here'}
         </p>
-        <p className="mt-0.5 text-xs text-neutral-400">JPEG, PNG or WEBP up to 8MB each — {images.length}/{max} added</p>
+        <p className="mt-0.5 text-xs text-neutral-400">JPEG, PNG or WEBP up to 4MB each — {images.length}/{max} added</p>
         <input
           ref={inputRef}
           type="file"
