@@ -1,0 +1,244 @@
+// PhotoSpot Georgia — Prisma schema
+// Default datasource is SQLite for zero-config local development.
+// For production, switch provider to "postgresql" and set DATABASE_URL
+// to a Postgres connection string (e.g. Railway or Supabase).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// NOTE on enums: the SQLite connector Prisma uses for local dev does not
+// support native enum types, so "enum-like" fields below are plain String
+// columns constrained and validated in application code (see src/types and
+// src/lib/validation.ts for the allowed literal values):
+//   Role:             "USER" | "ADMIN"
+//   LocationStatus:   "PENDING" | "APPROVED" | "REJECTED" | "CHANGES_REQUESTED"
+//   Difficulty:       "EASY" | "MEDIUM" | "HARD"
+//   NotificationType: "POST_APPROVED" | "POST_REJECTED" | "CHANGES_REQUESTED" |
+//                      "COMMENT_RECEIVED" | "COMMENT_REPLY" | "LOCATION_LIKED" |
+//                      "COMMENT_LIKED" | "ACCOUNT_BANNED" | "ADMIN_MESSAGE"
+//   ReportStatus:     "OPEN" | "REVIEWED" | "DISMISSED"
+// If you switch the datasource provider to "postgresql", you can promote
+// these back to real `enum` blocks and reference them in the fields below.
+// ---------------------------------------------------------------------------
+// Core models
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String   @unique
+  passwordHash  String
+  fullName      String
+  bio           String?
+  city          String?
+  avatarUrl     String?
+  instagram     String?
+  facebook      String?
+  website       String?
+  role          String   @default("USER")
+  isBanned      Boolean  @default(false)
+  bannedReason  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  resetTokenHash   String?
+  resetTokenExpiry DateTime?
+
+  locations      Location[]        @relation("UserLocations")
+  reviewedBy     Location[]        @relation("ReviewedByAdmin")
+  comments       Comment[]
+  commentLikes   CommentLike[]
+  likes          Like[]
+  favorites      Favorite[]
+  notifications  Notification[]    @relation("UserNotifications")
+  actorOn        Notification[]    @relation("ActorNotifications")
+  reportsFiled   Report[]          @relation("ReporterUser")
+  adminLogs      AdminLog[]        @relation("AdminActor")
+
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Location {
+  id          String         @id @default(cuid())
+  slug        String         @unique
+  title       String
+  description String
+  category    String
+  city        String
+  address     String?
+  latitude    Float
+  longitude   Float
+  tags        String         @default("[]") // JSON-encoded string[]
+  bestTime    String?
+  accessibility String?
+  parking     Boolean        @default(false)
+  difficulty  String         @default("EASY")
+
+  status        String         @default("PENDING")
+  rejectionNote String?
+
+  views       Int            @default(0)
+  featured    Boolean        @default(false)
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  reviewedAt  DateTime?
+
+  authorId    String
+  author      User           @relation("UserLocations", fields: [authorId], references: [id], onDelete: Cascade)
+
+  reviewedById String?
+  reviewedBy   User?         @relation("ReviewedByAdmin", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  images      Image[]
+  comments    Comment[]
+  likes       Like[]
+  favorites   Favorite[]
+  reports     Report[]
+
+  @@index([status])
+  @@index([city])
+  @@index([category])
+  @@index([latitude, longitude])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model Image {
+  id         String   @id @default(cuid())
+  url        String
+  width      Int?
+  height     Int?
+  order      Int      @default(0)
+  isCover    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([locationId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  parentId  String?
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies   Comment[] @relation("CommentReplies")
+
+  likes     CommentLike[]
+
+  @@index([locationId])
+  @@index([parentId])
+  @@index([authorId])
+}
+
+model CommentLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+  @@index([commentId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, locationId])
+  @@index([locationId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, locationId])
+  @@index([locationId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      String
+  message   String
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  userId    String
+  user      User             @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  actorId   String?
+  actor     User?            @relation("ActorNotifications", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  reason     String
+  details    String?
+  status     String       @default("OPEN")
+  createdAt  DateTime     @default(now())
+
+  locationId String
+  location   Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  reporterId String
+  reporter   User         @relation("ReporterUser", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([locationId])
+  @@index([status])
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  adminId   String
+  admin     User     @relation("AdminActor", fields: [adminId], references: [id], onDelete: Cascade)
+
+  targetType String? // "Location" | "User" | "Comment"
+  targetId   String?
+
+  @@index([adminId])
+  @@index([createdAt])
+}
