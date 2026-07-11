@@ -191,6 +191,7 @@ export async function POST(req: NextRequest) {
       if (attempt > 5) break;
     }
 
+    const isAdmin = user.role === 'ADMIN';
     const location = await prisma.location.create({
       data: {
         slug,
