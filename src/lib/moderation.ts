@@ -77,11 +77,12 @@ setInterval(() => {
 }, 5 * 60 * 1000).unref?.();
 
 export const RATE_LIMITS = {
-  createLocation: { limit: 5, windowMs: 60 * 60 * 1000 }, // 5 submissions / hour
-  comment: { limit: 20, windowMs: 10 * 60 * 1000 }, // 20 comments / 10 min
-  login: { limit: 10, windowMs: 15 * 60 * 1000 }, // 10 attempts / 15 min
+  createLocation: { limit: 5, windowMs: 60 * 60 * 1000 },
+  comment: { limit: 20, windowMs: 10 * 60 * 1000 },
+  login: { limit: 10, windowMs: 15 * 60 * 1000 },
   register: { limit: 5, windowMs: 60 * 60 * 1000 },
   passwordReset: { limit: 5, windowMs: 60 * 60 * 1000 },
+  passwordResetVerify: { limit: 8, windowMs: 15 * 60 * 1000 },
 };
 
 // ---------------------------------------------------------------------------
