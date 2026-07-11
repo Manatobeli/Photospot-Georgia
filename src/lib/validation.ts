@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CATEGORIES, GEORGIA_CITIES } from '@/lib/constants';
+import { CATEGORIES } from '@/lib/constants';
 import { DIFFICULTIES } from '@/types';
 
 const usernameRegex = /^[a-zA-Z0-9_.]{3,24}$/;
@@ -64,7 +64,7 @@ export const createLocationSchema = z.object({
   title: z.string().trim().min(4, 'Title must be at least 4 characters').max(120),
   description: z.string().trim().min(20, 'Description must be at least 20 characters').max(4000),
   category: z.enum(CATEGORIES as unknown as [string, ...string[]]),
-  city: z.enum(GEORGIA_CITIES as unknown as [string, ...string[]]),
+  city: z.string().trim().min(2, 'Enter a city, town, or village').max(80),
   address: z.string().trim().max(200).optional().or(z.literal('')),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
