@@ -31,7 +31,11 @@ export const forgotPasswordSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string().min(10),
+  email: z.string().trim().toLowerCase().email('Enter a valid email address'),
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Enter the 6-digit code'),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
@@ -41,7 +45,7 @@ export const resetPasswordSchema = z.object({
 
 export const editProfileSchema = z.object({
   fullName: z.string().trim().min(2).max(80),
-  bio: z.string().trim().max(500).optional().or(z.literal('')),
+  bio: z.string().trim().max(1000).optional().or(z.literal('')),
   city: z.string().trim().max(80).optional().or(z.literal('')),
   instagram: z.string().trim().max(80).optional().or(z.literal('')),
   facebook: z.string().trim().max(120).optional().or(z.literal('')),
@@ -52,7 +56,8 @@ export const editProfileSchema = z.object({
     .optional()
     .or(z.literal(''))
     .refine((v) => !v || /^https?:\/\//.test(v), 'Website must start with http:// or https://'),
-  avatarUrl: z.string().optional(),
+  avatarUrl: z.string().nullish(),
+  coverUrl: z.string().nullish(),
 });
 
 export const createLocationSchema = z.object({
