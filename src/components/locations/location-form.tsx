@@ -6,9 +6,11 @@ import { toast } from 'sonner';
 import { Loader2, Save, MapPin } from 'lucide-react';
 import { ImageUploader, type UploadedImage } from '@/components/locations/image-uploader';
 import { TagInput } from '@/components/locations/tag-input';
+import { CityAutocomplete } from '@/components/locations/city-autocomplete';
 import { LocationPickerMapClient } from '@/components/map/dynamic';
-import { CATEGORIES, GEORGIA_CITIES } from '@/lib/constants';
+import { CATEGORIES } from '@/lib/constants';
 import { DIFFICULTIES } from '@/types';
+
 
 export interface LocationFormValues {
   title: string;
@@ -165,14 +167,9 @@ export function LocationForm({
                 ))}
               </select>
             </div>
-            <div>
-              <label className="label-base">City</label>
-              <select className="input-base" value={form.city} onChange={(e) => update('city', e.target.value)} required>
-                <option value="" disabled>Select a city</option>
-                {GEORGIA_CITIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+           <div>
+              <label className="label-base">City / Town / Village</label>
+              <CityAutocomplete value={form.city} onChange={(v) => update('city', v)} />
             </div>
           </div>
           <div>
