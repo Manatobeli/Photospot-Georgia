@@ -9,7 +9,7 @@ export default async function SettingsPage() {
   const sessionUser = (await getCurrentUser())!;
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: sessionUser.id },
-    select: { fullName: true, bio: true, city: true, instagram: true, facebook: true, website: true, avatarUrl: true },
+    select: { fullName: true, bio: true, city: true, instagram: true, facebook: true, website: true, avatarUrl: true, coverUrl: true },
   });
 
   return (
@@ -24,6 +24,7 @@ export default async function SettingsPage() {
           facebook: user.facebook ?? '',
           website: user.website ?? '',
           avatarUrl: user.avatarUrl,
+          coverUrl: user.coverUrl,
         }}
       />
     </div>

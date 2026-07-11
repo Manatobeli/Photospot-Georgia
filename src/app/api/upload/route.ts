@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const subdirRaw = formData.get('type');
-    const subdir = subdirRaw === 'avatars' ? 'avatars' : 'locations';
+    const subdir =
+      subdirRaw === 'avatars' ? 'avatars' : subdirRaw === 'covers' ? 'covers' : 'locations';
     const files = formData.getAll('files').filter((f): f is File => f instanceof File);
 
     if (files.length === 0) return jsonError('No files provided', 400);

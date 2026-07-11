@@ -184,6 +184,7 @@ export async function POST(req: NextRequest) {
     const baseSlug = slugify(data.title) || 'location';
     let slug = baseSlug;
     let attempt = 0;
+    
     while (await prisma.location.findUnique({ where: { slug } })) {
       attempt += 1;
       slug = `${baseSlug}-${randomSuffix(4)}`;
@@ -205,8 +206,9 @@ export async function POST(req: NextRequest) {
         accessibility: data.accessibility || null,
         parking: data.parking,
         difficulty: data.difficulty,
-        status: 'PENDING',
+        status: isAdmin ? 'APPROVED' : 'PENDING',
         authorId: user.id,
+        ...(isAdmin ? { reviewedById: user.id, reviewedAt: new Date() } : {}),
         images: {
           create: data.images.map((url, index) => ({
             url,

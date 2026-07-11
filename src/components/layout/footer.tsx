@@ -1,9 +1,14 @@
+'use client';
+
 import Link from 'next/link';
 import { Instagram, Facebook, Camera } from 'lucide-react';
 import { Logo } from '@/components/layout/logo';
 import { GEORGIA_CITIES } from '@/lib/constants';
+import { useAuth } from '@/components/providers/auth-provider';
 
 export function Footer() {
+  const { user } = useAuth();
+
   return (
     <footer className="border-t border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -49,9 +54,18 @@ export function Footer() {
           <div>
             <h4 className="font-display text-sm font-semibold text-neutral-900 dark:text-neutral-100">Account</h4>
             <ul className="mt-3 space-y-2 text-sm text-neutral-500 dark:text-neutral-400">
-              <li><Link href="/login" className="hover:text-brand-600 dark:hover:text-brand-400">Log in</Link></li>
-              <li><Link href="/register" className="hover:text-brand-600 dark:hover:text-brand-400">Sign up</Link></li>
-              <li><Link href="/dashboard" className="hover:text-brand-600 dark:hover:text-brand-400">Dashboard</Link></li>
+              {user ? (
+                <>
+                  <li><Link href={`/profile/${user.username}`} className="hover:text-brand-600 dark:hover:text-brand-400">My Profile</Link></li>
+                  <li><Link href="/dashboard" className="hover:text-brand-600 dark:hover:text-brand-400">Dashboard</Link></li>
+                  <li><Link href="/dashboard/settings" className="hover:text-brand-600 dark:hover:text-brand-400">Settings</Link></li>
+                </>
+              ) : (
+                <>
+                  <li><Link href="/login" className="hover:text-brand-600 dark:hover:text-brand-400">Log in</Link></li>
+                  <li><Link href="/register" className="hover:text-brand-600 dark:hover:text-brand-400">Sign up</Link></li>
+                </>
+              )}
             </ul>
           </div>
         </div>

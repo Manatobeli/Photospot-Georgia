@@ -15,6 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: { username: st
         bio: true,
         city: true,
         avatarUrl: true,
+        coverUrl: true,
         instagram: true,
         facebook: true,
         website: true,

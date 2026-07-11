@@ -11,15 +11,8 @@ export class UploadError extends Error {}
 
 export async function saveUploadedImage(
   file: File,
-  subdir: 'locations' | 'avatars'
+  subdir: 'locations' | 'avatars' | 'covers'
 ): Promise<{ url: string; width: number; height: number }> {
-  if (!ALLOWED_MIME.has(file.type)) {
-    throw new UploadError('Only JPEG, PNG, WEBP or AVIF images are allowed');
-  }
-  if (file.size > MAX_FILE_BYTES) {
-    throw new UploadError('Image must be smaller than 4MB');
-  }
-
   const arrayBuffer = await file.arrayBuffer();
   const inputBuffer = Buffer.from(arrayBuffer);
 

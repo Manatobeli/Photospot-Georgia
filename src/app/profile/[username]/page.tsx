@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Instagram, Facebook, Globe, MapPin, Calendar, Settings, Camera, CheckCircle2, Clock, Heart, Eye } from 'lucide-react';
 import { prisma } from '@/lib/db';
@@ -18,6 +19,7 @@ async function getProfile(username: string, viewerId?: string, isAdmin?: boolean
       bio: true,
       city: true,
       avatarUrl: true,
+      coverUrl: true,
       instagram: true,
       facebook: true,
       website: true,
@@ -73,7 +75,9 @@ export default async function ProfilePage({ params }: { params: { username: stri
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="card-base overflow-hidden">
-        <div className="h-32 bg-brand-gradient sm:h-40" />
+        <div className="relative h-32 bg-brand-gradient sm:h-40">
+          {user.coverUrl && <Image src={user.coverUrl} alt="" fill className="object-cover" />}
+        </div>
         <div className="px-6 pb-6 sm:px-8">
           <div className="-mt-12 flex flex-col items-start gap-4 sm:-mt-14 sm:flex-row sm:items-end sm:justify-between">
             <Avatar src={user.avatarUrl} name={user.fullName} size="xl" className="ring-4 ring-white dark:ring-neutral-900" />

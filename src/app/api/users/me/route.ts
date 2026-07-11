@@ -19,6 +19,7 @@ export async function PATCH(req: NextRequest) {
         facebook: data.facebook || null,
         website: data.website || null,
         ...(data.avatarUrl ? { avatarUrl: data.avatarUrl } : {}),
+        ...(data.coverUrl !== undefined ? { coverUrl: data.coverUrl || null } : {}),
       },
     });
 
@@ -29,6 +30,7 @@ export async function PATCH(req: NextRequest) {
         email: user.email,
         fullName: user.fullName,
         avatarUrl: user.avatarUrl,
+        coverUrl: user.coverUrl,
         role: user.role,
         isBanned: user.isBanned,
       },
